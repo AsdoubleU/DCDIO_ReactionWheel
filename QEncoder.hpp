@@ -2,12 +2,11 @@
 #pragma once  //instead of safe include guard
 #include <mbed.h>
 #include <iostream>
-extern DigitalOut led1;
 class QEncoder {
     public:
     QEncoder(PinName pinA, PinName pinB)
       : _pinA(pinA), _pinB(pinB),_bi(pinA,pinB){}
-    void init()    {  // callbacks for all edges
+    void init(bool isPendulum)    {  // callbacks for all edges
         _pinA.rise(callback(this, &QEncoder::decode)); 
         _pinA.fall(callback(this, &QEncoder::decode));
         _pinB.rise(callback(this, &QEncoder::decode));
@@ -15,6 +14,7 @@ class QEncoder {
         _previousState = _bi;
         _count = 0;
         _errorCount=0;
+        _isPendulum=isPendulum;
     }
     int32_t getCount()    {
         return _count;
@@ -31,6 +31,7 @@ private:
     InterruptIn _pinA;
     InterruptIn _pinB;
     BusIn _bi;
+    bool _isPendulum;
     uint8_t _previousState;
     volatile int32_t _count;
     volatile uint32_t _errorCount;
@@ -51,8 +52,7 @@ private:
             _errorCount++; break;
         } 
         _previousState = newState; 
-        led1=!led1;
-        if(_count == 8200) {_count = 0;}
-        else if(_count == -8200) {_count = 0;}
+        if((_count == 8200) && (_isPendulum == true)) {_count = 0;}
+        else if((_count == -8200) && (_isPendulum == true)) {_count = 0;}
     } 
 };
